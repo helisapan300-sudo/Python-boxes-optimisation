@@ -64,6 +64,20 @@ Each visualization follows the same structure:
 - `hovertemplate`: defines hover text.
 - `update_layout()`: sets axes, background, and margins.
 
+```python
+fig_3d = go.Figure(data=[go.Scatter3d(
+    x=items["dim_1"], y=items["dim_2"], z=items["dim_3"],
+    mode="markers",
+    marker=dict(
+        size=items["quantity"] / items["quantity"].max() * 20 + 3,
+        color=items["quantity"], colorscale="Turbo", showscale=True,
+        colorbar=dict(title="Quantity"), line=dict(color="white", width=0.5), opacity=0.7),
+    text=items.apply(lambda r: f"SKU: {r['sku_id']}<br>Qty: {r['quantity']:,}<br>Dims: {r['dims_txt']}<br>Vol: {r['Volume_L']:.2f} L", axis=1),
+    hovertemplate="%{text}<extra></extra>",)])
+fig_3d.update_layout(height=600, margin=dict(l=0, r=0, b=0, t=30))
+st.plotly_chart(fig_3d, use_container_width=True)
+```
+
 ---
 
 ### 4.2 — Bubble Chart (Altair)
@@ -72,12 +86,22 @@ Each visualization follows the same structure:
 
 **Data:** `sizes_all`
 
-**Key elements:**
-- `.mark_circle()`: draws colored bubbles.
-- `x` and `y`: volume vs scenario.
-- `size`: bubble area proportional to box volume.
-- `color`: scenario or safety box category.
-- `tooltip`: displays contextual info (Scenario, Box ID, Dimensions, Volume).
+```python
+bubble = (
+    alt.Chart(sizes_all)
+    .mark_circle(opacity=0.75, stroke="white", strokeWidth=1)
+    .encode(
+        x=alt.X("Volume_L:Q", title="Volume (L)"),
+        y=alt.Y("Scenario:N", title=None, sort=["Optimised", "Current"]),
+        size=alt.Size("Volume_L:Q", scale=alt.Scale(range=[80, 1200])),
+        color=alt.Color("Category:N",
+                        scale=alt.Scale(domain=["Current", "Optimised", "Safety"],
+                                        range=[COLOR_CURRENT, COLOR_OPTIMISED, COLOR_SAFETY])),
+        tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Volume_L:Q")]
+    )
+)
+st.altair_chart(bubble, use_container_width=True)
+```
 
 ---
 
@@ -87,12 +111,21 @@ Each visualization follows the same structure:
 
 **Data:** `vf_cmp_plot`
 
-**Key elements:**
-- `.mark_bar()`: creates bar chart.
-- `x`: rank of box volume.
-- `y`: mean void fill (%).
-- `color`: scenario color mapping.
-- `tooltip`: detailed values on hover.
+```python
+chart_vf_cmp = (
+    alt.Chart(vf_cmp_plot)
+    .mark_bar()
+    .encode(
+        x=alt.X("Rank:N", title="Box rank by volume (1 = smallest)"),
+        y=alt.Y("Avg_Void_Fill_%:Q", title="Mean void fill (%)"),
+        color=alt.Color("Scenario:N",
+                        scale=alt.Scale(domain=["Current", "Optimised"],
+                                        range=[COLOR_CURRENT, COLOR_OPTIMISED])),
+        tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Avg_Void_Fill_%:Q")]
+    )
+)
+st.altair_chart(chart_vf_cmp, use_container_width=True)
+```
 
 ---
 
@@ -102,11 +135,22 @@ Each visualization follows the same structure:
 
 **Data:** `boxplot_all`
 
-**Key elements:**
-- `.mark_boxplot()`: displays median, quartiles, min/max.
-- `column`: facets charts side by side (Current / Optimized).
-- `color`: distinguishes scenarios.
-- `tooltip`: shows detailed statistics for each box.
+```python
+boxplot_chart = (
+    alt.Chart(boxplot_all)
+    .mark_boxplot(size=50, extent='min-max')
+    .encode(
+        x=alt.X("Box_Name:N", title="Box ID"),
+        y=alt.Y("void_fill_pct:Q", title="Void Fill (%)"),
+        color=alt.Color("Scenario:N",
+                        scale=alt.Scale(domain=["Current", "Optimised"],
+                                        range=[COLOR_CURRENT, COLOR_OPTIMISED])),
+        column=alt.Column("Scenario:N", title=""),
+        tooltip=[alt.Tooltip("selected_box:N"), alt.Tooltip("void_fill_pct:Q", aggregate="median")]
+    )
+)
+st.altair_chart(boxplot_chart)
+```
 
 ---
 
@@ -116,11 +160,23 @@ Each visualization follows the same structure:
 
 **Data:** `pie_data`
 
-**Key elements:**
-- `.mark_arc()`: draws donut chart sectors.
-- `theta`: sector size based on usage percentage.
-- `color`: color-coded per box.
-- `tooltip`: shows box ID and usage share.
+```python
+pie = (
+    alt.Chart(pie_data)
+    .mark_arc(outerRadius=120, innerRadius=40, stroke="white", strokeWidth=1)
+    .encode(
+        theta=alt.Theta("Usage (%):Q"),
+        color=alt.Color("box_id:N", scale=alt.Scale(domain=domain, range=range_colors)),
+        tooltip=[alt.Tooltip("box_id:N"), alt.Tooltip("Usage (%):Q")]
+    )
+)
+text = (
+    alt.Chart(pie_data)
+    .mark_text(radius=90, size=11, fontWeight="bold", color="white")
+    .encode(theta=alt.Theta("Usage (%):Q"), text=alt.Text("Usage (%):Q", format=".1f"))
+)
+st.altair_chart(pie + text, use_container_width=True)
+```
 
 ---
 
@@ -130,11 +186,19 @@ Each visualization follows the same structure:
 
 **Data:** `outliers_volumes`
 
-**Key elements:**
-- `.mark_bar()`: bar chart for frequency distribution.
-- `bin=alt.Bin(maxbins=25)`: groups data into bins.
-- `count()`: counts SKUs per bin.
-- `color`: purple tone representing the safety category.
+```python
+hist_volume = (
+    alt.Chart(outliers_volumes)
+    .mark_bar(color=COLOR_SAFETY, opacity=0.85)
+    .encode(
+        x=alt.X("Volume_L:Q", bin=alt.Bin(maxbins=25), title="Volume (Litres)"),
+        y=alt.Y("count()", title="Number of SKUs"),
+        tooltip=[alt.Tooltip("count()", title="Number of SKUs"),
+                 alt.Tooltip("Volume_L:Q", bin=True, title="Volume Range (L)")]
+    )
+)
+st.altair_chart(hist_volume, use_container_width=True)
+```
 
 ---
 
@@ -144,11 +208,20 @@ Each visualization follows the same structure:
 
 **Data:** `outliers_ratios`
 
-**Key elements:**
-- `.mark_circle()`: one point per SKU.
-- `x`, `y`: aspect ratios.
-- `size`: proportional to SKU volume.
-- `tooltip`: provides SKU ID, ratios, and volume.
+```python
+ratio_chart = (
+    alt.Chart(outliers_ratios)
+    .mark_circle(size=80, opacity=0.7, color=COLOR_SAFETY)
+    .encode(
+        x=alt.X("Ratio_L/W:Q", title="Length/Width Ratio", scale=alt.Scale(domain=[0, 10])),
+        y=alt.Y("Ratio_L/H:Q", title="Length/Height Ratio", scale=alt.Scale(domain=[0, 10])),
+        size=alt.Size("Volume_L:Q", title="Volume (L)", scale=alt.Scale(range=[50, 400])),
+        tooltip=[alt.Tooltip("sku_id:N"), alt.Tooltip("Ratio_L/W:Q"), alt.Tooltip("Ratio_L/H:Q")]
+    )
+)
+ref_line = alt.Chart(pd.DataFrame({'x': [0, 10], 'y': [0, 10]})).mark_line(strokeDash=[5, 5], color='gray').encode(x='x:Q', y='y:Q')
+st.altair_chart(ratio_chart + ref_line, use_container_width=True)
+```
 
 ---
 
@@ -177,5 +250,3 @@ Section titles and layout:
 
 Each visualization block is independent and designed to **display processed data cleanly** without using HTML.  
 Colors and styling are handled natively by the visualization libraries.
-
----
