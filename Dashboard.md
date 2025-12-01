@@ -203,6 +203,6 @@ The final dashboard is built and rendered using Streamlit's native functions.
 
 ## Conclusion
 
-This document provides a methodological description of the visualisation components of the dashboard. By detailing the data preparation pipeline and the objective of each chart, it serves as a technical reference for future maintenance, review, or enhancement of the project.
+This document provides a methodological description of the visualisation components of the dashboard.
 
 ---
