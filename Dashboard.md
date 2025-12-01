@@ -6,7 +6,7 @@ It describes:
 - how each **visualisation** is built with **Altair** or **Plotly**,  
 - and the **purpose of each code block** that generates a chart.  
 
-### How to Run the Dashboard
+### How to run the Dashboard
 
 When the dashboard is launched, a sidebar appears on the left-hand side of the screen.
 Use it to:
@@ -18,9 +18,9 @@ The visualisations and KPIs will then update automatically based on the selected
 
 ---
 
-## Part I: Methodological Framework and Data Preparation
+## Part I: Methodological framework and data preparation
 
-### 1.1 Libraries Used
+### 1.1 Libraries used
 
 The project relies on a selection of Python libraries.
 
@@ -32,14 +32,14 @@ The project relies on a selection of Python libraries.
 | **Pandas** | Data manipulation and preprocessing before plotting. |
 
 ---
-### 1.2. Data Processing Pipeline
+### 1.2. Data processing
 Before any visualisation, the raw data undergo some preparatory stages defined by key functions in the script:
 
-- **Standardisation of Dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardisation ensures consistent orientation when evaluating an item's fit within a given box.
-- **Box Assignment Logic (`assign_to_boxes`):** This function simulates the packing process. For each SKU, it iterates through the available boxes (sorted by volume) and assigns the item to the first, and therefore smallest—box that can accommodate it. 
-- **KPI Calculation (`kpis_calculation`):** This function computes the performance indicators. Notably, the average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric, reflecting reality.
+- **Standardisation of dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardisation ensures consistent orientation when evaluating an item's fit within a given box.
+- **Box assignment logic (`assign_to_boxes`):** This function simulates the packing process. For each SKU, it iterates through the available boxes (sorted by volume) and assigns the item to the first, and therefore smallest—box that can accommodate it. 
+- **KPI calculation (`kpis_calculation`):** This function computes the performance indicators. Notably, the average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric, reflecting reality.
 
-### 1.3. Data Flow and Key Variables
+### 1.3. Data flow and key variables
 The following table describes the main pandas DataFrames created and transformed throughout the script:
 
 | DataFrame | Description | Origin & Purpose |
@@ -54,14 +54,14 @@ The following table describes the main pandas DataFrames created and transformed
 
 ---
 
-## Part II: Analysis of Visualisations
+## Part II: Analysis of visualisations
 
 This section breaks down each chart in the dashboard, explaining its objective, technical construction, and analytical value.
 
-### 2.1. 3D Scatter Plot: SKU Dimensional Profile
+### 2.1. 3D Scatter Plot: SKU Dimensional profile
 **Objective:** To provide a three-dimensional representation of the SKU portfolio, positioning each item according to its sorted dimensions, and to capture the diversity and heterogeneity of items in terms of size and shape.  
-**Data Source:** `df_returns`  
-**Technical Implementation (Plotly):** A `Scatter3d` chart where the x, y, and z axes correspond to the sorted dimensions. The size of each point is proportional to the quantity, and its colour is also mapped to this quantity.
+**Data source:** `df_returns`  
+**Technical implementation (Plotly):** A `Scatter3d` chart where the x, y, and z axes correspond to the sorted dimensions. The size of each point is proportional to the quantity, and its colour is also mapped to this quantity.
 
 ```python
 st.subheader("SKU distribution (3D)")
@@ -84,10 +84,10 @@ fig_3d = go.Figure(data=[go.Scatter3d(
     hovertemplate="%{text}<extra></extra>",)])
 ```
 
-### 2.2. Bubble Chart: Comparison of Box Volumes
+### 2.2. Bubble chart: Comparison of box volumes
 **Objective:** To visually compare the volume of each box between the *Current* and *Optimised* scenarios.  
-**Data Source:** A consolidated DataFrame (`sizes_all`).  
-**Technical Implementation (Altair):** A `mark_circle` chart where the x-axis represents the box volume and the y-axis separates the two scenarios.
+**Data source:** A consolidated DataFrame (`sizes_all`).  
+**Technical implementation (Altair):** A `mark_circle` chart where the x-axis represents the box volume and the y-axis separates the two scenarios.
 
 ```python
 bubble = (
@@ -103,10 +103,10 @@ bubble = (
         tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Volume_L:Q")]))
 ```
 
-### 2.3. Stacked bar Chart: Mean Void Fill by Box
+### 2.3. Stacked bar chart: mean void fill by box
 **Objective:** To compare the average void fill for each box across the two scenarios.  
-**Data Source:** `vf_cmp_plot`  
-**Technical Implementation (Altair):** A `mark_bar` chart where the x-axis represents the box rank (from smallest to largest) and the y-axis shows the mean void fill percentage.
+**Data source:** `vf_cmp_plot`  
+**Technical implementation (Altair):** A `mark_bar` chart where the x-axis represents the box rank (from smallest to largest) and the y-axis shows the mean void fill percentage.
 
 ```python
 chart_vf_cmp = (
@@ -121,10 +121,10 @@ chart_vf_cmp = (
         tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Avg_Void_Fill_%:Q")]))
 ```
 
-### 2.4. Boxplots: Distribution of Void Fill
+### 2.4. Boxplots: Distribution of void fill
 **Objective:** To display the statistical distribution of void fill percentages for each box.  
-**Data Source:** `boxplot_all`  
-**Technical Implementation (Altair):** A `mark_boxplot` chart, faceted by scenario. Each boxplot illustrates the median, quartiles, and range (min-max) of void fill for items assigned to that box.
+**Data source:** `boxplot_all`  
+**Technical implementation (Altair):** A `mark_boxplot` chart, faceted by scenario. Each boxplot illustrates the median, quartiles, and range (min-max) of void fill for items assigned to that box.
 
 ```python
 boxplot_chart = (
@@ -140,10 +140,9 @@ boxplot_chart = (
         tooltip=[alt.Tooltip("selected_box:N"), alt.Tooltip("void_fill_pct:Q", aggregate="median")]))
 ```
 
-### 2.5. Pie Chart: Optimised Box Usage
+### 2.5. Pie chart: Optimised box usage distribution
 **Objective:** To illustrate the utilisation rate of each box in the optimised set.  
-**Data Source:** `pie_data`  
-**Technical Implementation (Altair):** A `mark_arc` chart (donut chart) where the angle of each slice is encoded by the "Usage (%)" statistic.
+**Data source:** `pie_data`  
 
 ```python
 pie = (alt.Chart(pie_data)
@@ -158,10 +157,9 @@ text = (
     .encode(theta=alt.Theta("Usage (%):Q"), text=alt.Text("Usage (%):Q", format=".1f")))
 ```
 
-### 2.6. Histogram: Outlier Analysis
+### 2.6. Histogram: outlier analysis
 **Objective:** To analyse the characteristics of SKUs assigned to the "safety box."  
-**Data Source:** `outliers`  
-**Technical Implementation (Altair):**  
+**Data source:** `outliers`  
 - **Histogram:** A `mark_bar` chart that bins outlier SKUs by their volume.
   
 ```python
@@ -176,13 +174,12 @@ hist_volume = (
 ```
 ---
 
-## Part III: Dashboard Integration and Structure
+## Part III: Dashboard Structure
 
 The dashboard is built and rendered using Streamlit's native functions.
 
 - **Layout:** The structure is managed by `st.columns()` to position indicators and comparative metrics side-by-side. Visual division between sections is achieved with `st.divider()`.
-- **Content Display:** Section headers are created with `st.subheader()`, and explanatory text with `st.caption()` or `st.markdown()`. Key performance indicators are displayed with `st.metric()`.
-- **Chart Rendering:** Altair and Plotly charts are embedded into the application using `st.altair_chart()` and `st.plotly_chart()`.
+- **Content display:** Section headers are created with `st.subheader()`, and explanatory text with `st.caption()` or `st.markdown()`. Key performance indicators are displayed with `st.metric()`.
 
 ---
 
