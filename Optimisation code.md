@@ -3,7 +3,7 @@
 This document provides a detailed technical explanation of the `Optimised_boxes_solution.py` script. The script defines a percentile-based optimisation engine that determines an optimal set of five box dimensions. The objective is to minimise void fill while limiting the number of outlier SKUs that would require an oversized "safety box."
 
 
-### How to Run the Optimiser (stand-alone script)
+### How to Run the Optimiser 
 
 **Input file**: a returns item dataset in CSV format, containing one row per SKU with the columns sku_id, l, w, h, and quantity.
 - Dimensions (l, w, h) must be in millimetres.
