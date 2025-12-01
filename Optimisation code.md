@@ -7,7 +7,7 @@ This document provides a detailed explanation of the `Optimised_boxes_solution.p
 
 **Input file**: a returns item dataset in CSV format, containing one row per SKU with the columns sku_id, l, w, h, and quantity.
 - Dimensions (l, w, h) must be in millimetres.
-- 'quantity' must be an integer representing the number of returned units for that SKU.
+- quantity must be an integer representing the number of returned units for that SKU.
   
 **Launch**: run the optimiser script directly from a terminal and provide the path to your returns dataset when requested.
 **Output**: the console displays the proposed set of five optimised boxes, any safety box added for outliers, and a summary report of usage and average void fill, including metrics with and without the safety box.
