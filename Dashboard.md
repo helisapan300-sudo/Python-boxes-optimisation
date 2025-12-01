@@ -37,7 +37,7 @@ Before any visualisation, the raw data undergo some preparatory stages defined b
 
 - **Standardisation of dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardisation ensures consistent orientation when evaluating an item's fit within a given box.
 - **Box assignment logic (`assign_to_boxes`):** This function simulates the packing process. For each SKU, it iterates through the available boxes (sorted by volume) and assigns the item to the first, and therefore smallest—box that can accommodate it. 
-- **KPI calculation (`kpis_calculation`):** This function calculates the performance indicators. Notably, the average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric, reflecting reality.
+- **KPI calculation (`kpis_calculation`):** This function calculates the performance indicators. The average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric.
 
 ### 1.3. Data flow and key variables
 The following table describes the main pandas DataFrames created and transformed throughout the script:
