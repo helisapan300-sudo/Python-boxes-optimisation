@@ -104,7 +104,7 @@ bubble = (
 ```
 
 ### 2.3. Stacked bar Chart: Mean Void Fill by Box
-**Objective:** To compare the average void fill for each box, ranked by volume, across the two scenarios.  
+**Objective:** To compare the average void fill for each box across the two scenarios.  
 **Data Source:** `vf_cmp_plot`  
 **Technical Implementation (Altair):** A `mark_bar` chart where the x-axis represents the box rank (from smallest to largest) and the y-axis shows the mean void fill percentage.
 
