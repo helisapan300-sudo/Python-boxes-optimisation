@@ -6,6 +6,16 @@ It describes:
 - how each **visualisation** is built with **Altair** or **Plotly**,  
 - and the **purpose of each code block** that generates a chart.  
 
+### How to Run the Dashboard
+
+When the dashboard is launched, a sidebar appears on the left-hand side of the screen.
+Use it to:
+- Specify the paths to the **returns dataset, current boxes file, and optimiser script**.
+- Check that each file is correctly loaded (a success message appears once detected).
+- Click “Run” to execute the analysis.
+
+The visualisations and KPIs will then update automatically based on the selected files.
+
 ---
 
 ## Part I: Methodological Framework and Data Preparation
