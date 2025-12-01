@@ -78,7 +78,7 @@ Once a five-box configuration is created, it must be evaluated:
 
 - **Objective Function**: The performance of the configuration is calculated with the following score:
 
-  Score = Void Fill (%) + lambda x Outlier Rate (%) 
+  Score = Void Fill (%) + λ x Outlier Rate (%) 
 
   The λ (lambda) coefficient is a hyperparameter that serves as a penalty factor. A high λ value heavily penalises configurations that produce many outliers, thus steering the optimisation toward more inclusive solutions at the cost of a potentially higher void fill.
 
