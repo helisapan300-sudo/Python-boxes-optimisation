@@ -182,5 +182,5 @@ def optimise_packaging(datafile: str) -> Dict:
 ---
 
 ## Conclusion
-The `Optimised_boxes_solution.py` script implements a deterministic, percentile-based packaging optimiser. It provides an interpretable and transparent approach to multi-box optimisation without relying on randomisation. Through clear object-oriented structure and robust reporting, it serves as the computational foundation for the Streamlit visualisation dashboard.
+The `Optimised_boxes_solution.py` script implements a deterministic, percentile-based packaging optimiser. It provides an interpretable and transparent approach to multi-box optimisation without relying on randomisation.
 
