@@ -160,7 +160,7 @@ st.altair_chart(hist_volume, use_container_width=True)
 ```
 
 - **Scatter Plot:** A `mark_circle` chart plotting the aspect ratios of each outlier (Length/Width vs. Length/Height).  
-**Analytical Purpose:** To understand why certain items are considered outliers. The histogram reveals if they are simply too large, while the scatter plot exposes items with extreme shapes.
+**Analytical Purpose:** To understand why certain items are considered outliers. The histogram reveals if they are simply too large, while the scatter plot exposes items with extreme shapes (very flat, very tall and thin).
 
 ```python
 ratio_chart = (
