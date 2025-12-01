@@ -63,6 +63,27 @@ This section breaks down each chart in the dashboard, explaining its objective, 
 **Data Source:** `df_returns`  
 **Technical Implementation (Plotly):** A `Scatter3d` chart where the x, y, and z axes correspond to the sorted dimensions. The size of each point is proportional to the quantity, and its colour is also mapped to this quantity.
 
+```python
+st.subheader("SKU distribution (3D)")
+
+items = df_returns.copy()
+items["Volume_L"] = (items["sku_volume"] / 1_000_000).round(2)
+items["dims_txt"] = (
+    items["l"].astype(int).astype(str) + " × "
+    + items["w"].astype(int).astype(str) + " × "
+    + items["h"].astype(int).astype(str) + " mm")
+
+fig_3d = go.Figure(data=[go.Scatter3d(
+    x=items["dim_1"], y=items["dim_2"], z=items["dim_3"],
+    mode="markers",
+    marker=dict(
+        size=items["quantity"] / items["quantity"].max() * 20 + 3,
+        color=items["quantity"], colorscale="Turbo", showscale=True,
+        colorbar=dict(title="Quantity"), line=dict(color="white", width=0.5), opacity=0.7),
+    text=items.apply(lambda r: f"SKU: {r['sku_id']}<br>Qty: {r['quantity']:,}<br>Dims: {r['dims_txt']}<br>Vol: {r['Volume_L']:.2f} L", axis=1),
+    hovertemplate="%{text}<extra></extra>",)])
+```
+
 ### 2.2. Bubble Chart: Comparison of Box Volumes
 **Objective:** To visually compare the volume of each box between the *Current* and *Optimised* scenarios.  
 **Data Source:** A consolidated DataFrame (`sizes_all`).  
@@ -80,10 +101,9 @@ bubble = (
                         scale=alt.Scale(domain=["Current", "Optimised", "Safety"],
                                         range=[COLOR_CURRENT, COLOR_OPTIMISED, COLOR_SAFETY])),
         tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Volume_L:Q")]))
-st.altair_chart(bubble, use_container_width=True)
 ```
 
-### 2.3. Bar Chart: Mean Void Fill by Box
+### 2.3. Stacked bar Chart: Mean Void Fill by Box
 **Objective:** To compare the average void fill for each box, ranked by volume, across the two scenarios.  
 **Data Source:** `vf_cmp_plot`  
 **Technical Implementation (Altair):** A `mark_bar` chart where the x-axis represents the box rank (from smallest to largest) and the y-axis shows the mean void fill percentage.
@@ -99,7 +119,6 @@ chart_vf_cmp = (
                         scale=alt.Scale(domain=["Current", "Optimised"],
                                         range=[COLOR_CURRENT, COLOR_OPTIMISED])),
         tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Avg_Void_Fill_%:Q")]))
-st.altair_chart(chart_vf_cmp, use_container_width=True)
 ```
 
 ### 2.4. Boxplots: Distribution of Void Fill
@@ -119,7 +138,6 @@ boxplot_chart = (
                                         range=[COLOR_CURRENT, COLOR_OPTIMISED])),
         column=alt.Column("Scenario:N", title=""),
         tooltip=[alt.Tooltip("selected_box:N"), alt.Tooltip("void_fill_pct:Q", aggregate="median")]))
-st.altair_chart(boxplot_chart)
 ```
 
 ### 2.5. Pie Chart: Optimised Box Usage
@@ -138,7 +156,6 @@ text = (
     alt.Chart(pie_data)
     .mark_text(radius=90, size=11, fontWeight="bold", colour="white")
     .encode(theta=alt.Theta("Usage (%):Q"), text=alt.Text("Usage (%):Q", format=".1f")))
-st.altair_chart(pie + text, use_container_width=True)
 ```
 
 ### 2.6. Histogram & Scatter Plot: Outlier Analysis
@@ -156,7 +173,6 @@ hist_volume = (
         y=alt.Y("count()", title="Number of SKUs"),
         tooltip=[alt.Tooltip("count()", title="Number of SKUs"),
                  alt.Tooltip("Volume_L:Q", bin=True, title="Volume Range (L)")]))
-st.altair_chart(hist_volume, use_container_width=True)
 ```
 
 - **Scatter Plot:** A `mark_circle` chart plotting the aspect ratios of each outlier (Length/Width vs. Length/Height).  
@@ -172,7 +188,6 @@ ratio_chart = (
         size=alt.Size("Volume_L:Q", title="Volume (L)", scale=alt.Scale(range=[50, 400])),
         tooltip=[alt.Tooltip("sku_id:N"), alt.Tooltip("Ratio_L/W:Q"), alt.Tooltip("Ratio_L/H:Q")]))
 ref_line = alt.Chart(pd.DataFrame({'x': [0, 10], 'y': [0, 10]})).mark_line(strokeDash=[5, 5], colour='grey').encode(x='x:Q', y='y:Q')
-st.altair_chart(ratio_chart + ref_line, use_container_width=True)
 ```
 ---
 
