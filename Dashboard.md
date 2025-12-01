@@ -158,7 +158,7 @@ text = (
     .encode(theta=alt.Theta("Usage (%):Q"), text=alt.Text("Usage (%):Q", format=".1f")))
 ```
 
-### 2.6. Histogram & Scatter Plot: Outlier Analysis
+### 2.6. Histogram: Outlier Analysis
 **Objective:** To analyse the characteristics of SKUs assigned to the "safety box."  
 **Data Source:** `outliers`  
 **Technical Implementation (Altair):**  
@@ -173,21 +173,6 @@ hist_volume = (
         y=alt.Y("count()", title="Number of SKUs"),
         tooltip=[alt.Tooltip("count()", title="Number of SKUs"),
                  alt.Tooltip("Volume_L:Q", bin=True, title="Volume Range (L)")]))
-```
-
-- **Scatter Plot:** A `mark_circle` chart plotting the aspect ratios of each outlier (Length/Width vs. Length/Height).  
-**Analytical Purpose:** To understand why certain items are considered outliers. The histogram reveals if they are simply too large, while the scatter plot exposes items with extreme shapes (very flat, very tall and thin).
-
-```python
-ratio_chart = (
-    alt.Chart(outliers_ratios)
-    .mark_circle(size=80, opacity=0.7, colour=COLOR_SAFETY)
-    .encode(
-        x=alt.X("Ratio_L/W:Q", title="Length/Width Ratio", scale=alt.Scale(domain=[0, 10])),
-        y=alt.Y("Ratio_L/H:Q", title="Length/Height Ratio", scale=alt.Scale(domain=[0, 10])),
-        size=alt.Size("Volume_L:Q", title="Volume (L)", scale=alt.Scale(range=[50, 400])),
-        tooltip=[alt.Tooltip("sku_id:N"), alt.Tooltip("Ratio_L/W:Q"), alt.Tooltip("Ratio_L/H:Q")]))
-ref_line = alt.Chart(pd.DataFrame({'x': [0, 10], 'y': [0, 10]})).mark_line(strokeDash=[5, 5], colour='grey').encode(x='x:Q', y='y:Q')
 ```
 ---
 
