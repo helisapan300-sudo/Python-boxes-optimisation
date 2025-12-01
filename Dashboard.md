@@ -85,8 +85,7 @@ fig_3d = go.Figure(data=[go.Scatter3d(
 ```
 
 ### 2.2. Bubble chart: Comparison of box volumes
-**Objective:** To visually compare the volume of each box between the *Current* and *Optimised* scenarios.  
-**Data source:** A consolidated DataFrame (`sizes_all`).  
+**Objective:** To visually compare the volume of each box between the *Current* and *Optimised* scenarios.   
 **Technical implementation (Altair):** A `mark_circle` chart where the x-axis represents the box volume and the y-axis separates the two scenarios.
 
 ```python
