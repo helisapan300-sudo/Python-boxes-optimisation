@@ -119,9 +119,9 @@ def _add_safety_box_to(self, boxes: List[Box]) -> None:
     outliers = [s for s in self.skus if s.assigned_box is None]
     if not outliers:
         return
-    d1 = int(math.ceil((max(s.dim_1 for s in outliers)+20)/50)*50)
-    d2 = int(math.ceil((max(s.dim_2 for s in outliers)+20)/50)*50)
-    d3 = int(math.ceil((max(s.dim_3 for s in outliers)+20)/50)*50)
+    d1 = int(math.ceil(max(s.dim_1 for s in outliers)/50)*50)
+    d2 = int(math.ceil(max(s.dim_2 for s in outliers)/50)*50)
+    d3 = int(math.ceil(max(s.dim_3 for s in outliers)/50)*50)
     boxes.append(Box("OPT_SAFETY", d1, d2, d3))
 ```
 
