@@ -33,11 +33,11 @@ The project relies on a selection of Python libraries.
 
 ---
 ### 1.2. Data Processing Pipeline
-Before any visualisation, the raw data undergo several preparatory stages defined by key functions in the script:
+Before any visualisation, the raw data undergo some preparatory stages defined by key functions in the script:
 
-- **Standardisation of Dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are systematically sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardisation ensures consistent orientation when evaluating an item's fit within a given box.
-- **Box Assignment Logic (`assign_to_boxes`):** This function simulates the packing process. For each SKU, it iterates through the available boxes (sorted by volume) and assigns the item to the first—and therefore smallest—box that can accommodate it. This logic is fundamental to the void fill calculation.
-- **KPI Calculation (`kpis_calculation`):** This function computes the performance indicators. Notably, the average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric, reflecting operational reality.
+- **Standardisation of Dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardisation ensures consistent orientation when evaluating an item's fit within a given box.
+- **Box Assignment Logic (`assign_to_boxes`):** This function simulates the packing process. For each SKU, it iterates through the available boxes (sorted by volume) and assigns the item to the first, and therefore smallest—box that can accommodate it. 
+- **KPI Calculation (`kpis_calculation`):** This function computes the performance indicators. Notably, the average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric, reflecting reality.
 
 ### 1.3. Data Flow and Key Variables
 The following table describes the main pandas DataFrames created and transformed throughout the script:
@@ -178,7 +178,7 @@ hist_volume = (
 
 ## Part III: Dashboard Integration and Structure
 
-The final dashboard is built and rendered using Streamlit's native functions.
+The dashboard is built and rendered using Streamlit's native functions.
 
 - **Layout:** The structure is managed by `st.columns()` to position indicators and comparative metrics side-by-side. Visual division between sections is achieved with `st.divider()`.
 - **Content Display:** Section headers are created with `st.subheader()`, and explanatory text with `st.caption()` or `st.markdown()`. Key performance indicators are displayed with `st.metric()`.
