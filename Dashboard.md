@@ -6,7 +6,7 @@ It describes:
 - how each **visualisation** is built with **Altair** or **Plotly**,  
 - and the **purpose of each code block** that generates a chart.  
 
-### How to run the Dashboard
+### How to run the dashboard
 
 When the dashboard is launched, a sidebar appears on the left-hand side of the screen.
 Use it to:
