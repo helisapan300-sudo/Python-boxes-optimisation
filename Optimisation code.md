@@ -1,7 +1,16 @@
 # README: Technical Guide to the Packaging Optimisation Engine
 
-## Introduction
 This document provides a detailed technical explanation of the `Optimised_boxes_solution.py` script. The script defines a percentile-based optimisation engine that determines an optimal set of five box dimensions. The objective is to minimise void fill while limiting the number of outlier SKUs that would require an oversized "safety box."
+
+
+### How to Run the Optimiser (stand-alone script)
+
+**Input file**: a returns item dataset in CSV format, containing one row per SKU with the columns sku_id, l, w, h, and quantity.
+- Dimensions (l, w, h) must be in millimetres.
+- 'quantity' must be an integer representing the number of returned units for that SKU.
+  
+**Launch**: run the optimiser script directly from a terminal and provide the path to your returns dataset when requested.
+**Output**: the console displays the proposed set of five optimised boxes, any safety box added for outliers, and a summary report of usage and average void fill, including metrics with and without the safety box.
 
 ---
 
