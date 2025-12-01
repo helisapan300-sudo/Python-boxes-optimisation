@@ -1,9 +1,9 @@
-# README — Technical Guide to the Packaging Optimisation Engine
+# README — Technical Guide to the Packaging Optimisation Solution
 
-This document provides a detailed technical explanation of the `Optimised_boxes_solution.py` script. The script defines a percentile-based optimisation engine that determines an optimal set of five box dimensions. The objective is to minimise void fill while limiting the number of outlier SKUs that would require an oversized "safety box."
+This document provides a detailed explanation of the `Optimised_boxes_solution.py` script. The script defines a percentile-based optimisation code that determines an optimal set of five box dimensions. The objective is to minimise void fill while limiting the number of outlier SKUs that would require an oversized "safety box."
 
 
-### How to Run the Optimiser 
+### How to run the optimiser code 
 
 **Input file**: a returns item dataset in CSV format, containing one row per SKU with the columns sku_id, l, w, h, and quantity.
 - Dimensions (l, w, h) must be in millimetres.
@@ -14,39 +14,39 @@ This document provides a detailed technical explanation of the `Optimised_boxes_
 
 ---
 
-## Part I: Methodological Framework
+## Part I: Methodological framework
 
-### 1.1. Object-Oriented Modelling
-The core of the script is structured around three main classes that model the problem domain:
+### 1.1. Problem modelling using Class 
+The core of the script is structured around three main classes that model the problem:
 
-- **`SKU`**: Represents a single stock-keeping unit. Each instance holds its dimensions (systematically sorted from largest to smallest for orientation-independent fit assessment), volume, and quantity. It also tracks which box it has been assigned to.
+- **`SKU`**: Represents a single stock-keeping unit. Each instance holds its dimensions (sorted from largest to smallest for orientation-independent fit assessment), volume, and quantity. It also tracks which box it has been assigned to.
 
 - **`Box`**: Represents a type of packaging box. Similar to `SKU`, its dimensions are sorted. It includes essential methods to check if a SKU can fit inside (`can_fit`) and to calculate the resulting void fill percentage (`calculate_void_fill`).
 
 - **`BoxOptimiser`**: The central class that orchestrates the optimisation process. It takes a list of SKU objects as input and manages the generation, evaluation, and selection of candidate box configurations.
 
-### 1.2. Optimisation Approach
-The algorithm implements a **grid search** over a defined set of percentiles. It does not use stochastic methods (like genetic algorithms or simulated annealing) but instead follows a deterministic, data-driven approach.
+### 1.2. Optimisation approach
+The algorithm implements a **grid search** over a defined set of percentiles. 
 
 The process is as follows:
-1. **Candidate Generation**: For each percentile value in a predefined grid (e.g., 86, 88, ..., 94), a unique five-box configuration is generated.
+1. **Candidate generation**: For each percentile value in a predefined grid (e.g., 86, 88, ..., 94), a unique five-box configuration is generated.
 2. **Evaluation**: Each configuration is evaluated by simulating the assignment of all SKUs. This evaluation yields two key metrics: the average void fill (weighted by quantity) and the rate of outliers (items that fit in none of the five boxes).
 3. **Selection**: The "best" configuration is selected using an objective function that combines these two metrics.
 
 ---
 
-## Part II: Detailed Algorithmic Logic
+## Part II: Detailed solving methodology
 
-### 2.1. Box Configuration Generation (`_create_boxes`)
-This method is central to the creation of candidate solutions. The process is as follows:
+### 2.1. New optimsed boxes collection generation (`_create_boxes`)
+This method is key to the creation of candidate solutions. The process is as follows:
 
-- **Data Weighting**: First, the SKU dataset is weighted by quantity. This means the dimensions of high-volume items are repeated proportionally, ensuring their influence on the statistical distribution is accurate.
+- **Data weighting**: First, the SKU dataset is weighted by quantity. This means the dimensions of high-volume items are repeated proportionally, ensuring their influence on the statistical distribution is accurate.
 
-- **Volume Partitioning**: The weighted SKUs are then divided into five groups (quantiles) based on their volume. Each group thereby represents a slice of the item volume distribution.
+- **Volume partitioning**: The weighted SKUs are then divided into five groups (quantiles) based on their volume. Each group thereby represents a slice of the item volume distribution.
 
-- **Percentile-based Dimension Calculation**: For each group, the dimensions of the corresponding box are determined by calculating a specified percentile (e.g., the 90th percentile) of the dimensions (`dim_1`, `dim_2`, `dim_3`) of the SKUs within that group. Using a percentile (rather than the maximum value) is a heuristic designed to create boxes that fit the majority of items in a group, while accepting that a few exceptionally large items may become outliers.
+- **Percentile-based calculation**: For each group, the dimensions of the corresponding box are determined by calculating a specified percentile (e.g., the 90th percentile) of the dimensions (`dim_1`, `dim_2`, `dim_3`) of the SKUs within that group. Using a percentile (rather than the maximum value) is designed to create boxes that fit the majority of items in a group, while accepting that a few exceptionally large items may become outliers.
 
-- **Operational Rounding**: The calculated dimensions are rounded up to the nearest 10mm for practical feasibility and standardisation.
+- **Rounding**: The calculated dimensions are rounded up to the nearest 10mm for practical feasibility and standardisation.
 
 ```python
 def _create_boxes(self, n_boxes: int, percentile: int) -> List[Box]:
@@ -69,18 +69,18 @@ def _create_boxes(self, n_boxes: int, percentile: int) -> List[Box]:
 
 ---
 
-### 2.2. Evaluation and Objective Function (`_evaluate_boxes`, `_objective`)
+### 2.2. Evaluation and objective function (`_evaluate_boxes`, `_objective`)
 Once a five-box configuration is created, it must be evaluated:
 
 - **Assignment**: Each SKU is assigned to the smallest available box (sorted by volume) into which it can fit. If it fits in none, it is marked as an outlier.
 
-- **Metric Calculation**: The script calculates the weighted average void fill for all assigned items and the percentage of outliers relative to the total item quantity.
+- **Metric calculation**: The script calculates the weighted average void fill for all assigned items and the percentage of outliers relative to the total item quantity.
 
-- **Objective Function**: The performance of the configuration is calculated with the following score:
+- **Objective function**: The performance of the configuration is calculated with the following score:
 
   Score = Void Fill (%) + λ x Outlier Rate (%) 
 
-  The λ (lambda) coefficient is a hyperparameter that serves as a penalty factor. A high λ value heavily penalises configurations that produce many outliers, thus steering the optimisation toward more inclusive solutions at the cost of a potentially higher void fill.
+  The λ (lambda) coefficient is a parameter that serves as a penalty factor. A high λ value heavily penalises configurations that produce many outliers, thus steering the optimisation toward more inclusive solutions at the cost of a potentially higher void fill.
 
 ```python
 def _evaluate_boxes(self, boxes: List[Box]) -> Tuple[float, float]:
@@ -111,8 +111,8 @@ def _evaluate_boxes(self, boxes: List[Box]) -> Tuple[float, float]:
 
 ---
 
-### 2.3. Outlier Management (`_add_safety_box_to`)
-If the selected configuration produces outliers, an optional "safety box" can be added. Its dimensions are calculated to be just large enough to accommodate the largest of the outlier items, with a small margin. The evaluation is then re-run with this additional box to obtain final metrics that reflect a 100% fulfilment solution.
+### 2.3. Outlier (`_add_safety_box_to`)
+If the selected configuration produces outliers, an optional "safety box" can be added. Its dimensions are calculated to be just large enough to accommodate the largest of the outlier items. The evaluation is then re-run with this additional box to obtain final metrics that reflect a 100% fulfilment solution.
 
 ```python
 def _add_safety_box_to(self, boxes: List[Box]) -> None:
@@ -127,13 +127,13 @@ def _add_safety_box_to(self, boxes: List[Box]) -> None:
 
 ---
 
-## Part III: Outputs and Reporting
+## Part III: Outputs and reporting
 
 The main `optimise_packaging()` function executes the full process and generates the following outputs:
 
-- **Console Summary**: Prints a summary of key results, including average void fill and outlier rate both *with* and *without* the safety box.
-- **Box Dimensions**: Displays the dimensions of each optimised box.
-- **Per-Box Statistics**: A pandas DataFrame containing, for each box, its usage rate and average void fill. This DataFrame is structured for direct use in the Streamlit visualisation dashboard.
+- **Console summary**: Prints a summary of key results, including average void fill and outlier rate both *with* and *without* the safety box.
+- **Box dimensions**: Displays the dimensions of each optimised box.
+- **Per-box statistics**: A pandas DataFrame containing, for each box, its usage rate and average void fill. This DataFrame is structured for direct use in the Streamlit visualisation dashboard.
 
 ```python
 def optimise_packaging(datafile: str) -> Dict:
