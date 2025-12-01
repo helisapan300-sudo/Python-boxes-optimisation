@@ -1,9 +1,9 @@
 # README — Visualisations in the Packaging Performance Dashboard
 
-This document provides a technical explanation of the code and data visualizations implemented in the `Final_dash.py` script.  
+This document provides a technical explanation of the code and data visualisations implemented in the `Dashboard_comparison.py` script.  
 It describes:
-- how the **data are prepared and passed** to the charts,
-- how each **visualization** is built with **Altair** or **Plotly**,  
+- how the **data are prepared and passed on** to the charts,
+- how each **visualisation** is built with **Altair** or **Plotly**,  
 - and the **purpose of each code block** that generates a chart.  
 
 ---
@@ -18,14 +18,14 @@ The project relies on a selection of Python libraries.
 |----------|---------------|
 | **Streamlit** | User interface and chart rendering. |
 | **Altair** | 2D declarative charts (bar, bubble, pie, boxplot, histogram, scatter). |
-| **Plotly** | 3D interactive visualizations. |
+| **Plotly** | 3D interactive visualisations. |
 | **Pandas** | Data manipulation and preprocessing before plotting. |
 
 ---
 ### 1.2. Data Processing Pipeline
-Before any visualization, the raw data undergoes several preparatory stages defined by key functions in the script:
+Before any visualisation, the raw data undergo several preparatory stages defined by key functions in the script:
 
-- **Standardization of Dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are systematically sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardization ensures consistent orientation when evaluating an item's fit within a given box.
+- **Standardisation of Dimensions (`prepare_returns`):** The dimensions of each returned item (SKU) are systematically sorted from longest to shortest (`dim_1`, `dim_2`, `dim_3`). This standardisation ensures consistent orientation when evaluating an item's fit within a given box.
 - **Box Assignment Logic (`assign_to_boxes`):** This function simulates the packing process. For each SKU, it iterates through the available boxes (sorted by volume) and assigns the item to the first—and therefore smallest—box that can accommodate it. This logic is fundamental to the void fill calculation.
 - **KPI Calculation (`kpis_calculation`):** This function computes the performance indicators. Notably, the average void fill is calculated as a weighted average, taking into account the quantity of each SKU. This ensures that high-volume items have a proportionally greater impact on the final metric, reflecting operational reality.
 
@@ -44,14 +44,14 @@ The following table describes the main pandas DataFrames created and transformed
 
 ---
 
-## Part II: Analysis of Visualizations
+## Part II: Analysis of Visualisations
 
 This section breaks down each chart in the dashboard, explaining its objective, technical construction, and analytical value.
 
 ### 2.1. 3D Scatter Plot: SKU Dimensional Profile
-**Objective:** To provide a three-dimensional representation of the SKU portfolio, positioning each item according to its sorted dimensions, and to capture the diversity and heterogeneity of items in terms of size and shape.
+**Objective:** To provide a three-dimensional representation of the SKU portfolio, positioning each item according to its sorted dimensions, and to capture the diversity and heterogeneity of items in terms of size and shape.  
 **Data Source:** `df_returns`  
-**Technical Implementation (Plotly):** A `Scatter3d` chart where the x, y, and z axes correspond to the sorted dimensions. The size of each point is proportional to the quantity, and its color is also mapped to this quantity.
+**Technical Implementation (Plotly):** A `Scatter3d` chart where the x, y, and z axes correspond to the sorted dimensions. The size of each point is proportional to the quantity, and its colour is also mapped to this quantity.
 
 ### 2.2. Bubble Chart: Comparison of Box Volumes
 **Objective:** To visually compare the volume of each box between the *Current* and *Optimised* scenarios.  
@@ -66,7 +66,7 @@ bubble = (
         x=alt.X("Volume_L:Q", title="Volume (L)"),
         y=alt.Y("Scenario:N", title=None, sort=["Optimised", "Current"]),
         size=alt.Size("Volume_L:Q", scale=alt.Scale(range=[80, 1200])),
-        color=alt.Color("Category:N",
+        colour=alt.Colour("Category:N",
                         scale=alt.Scale(domain=["Current", "Optimised", "Safety"],
                                         range=[COLOR_CURRENT, COLOR_OPTIMISED, COLOR_SAFETY])),
         tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Volume_L:Q")]))
@@ -85,7 +85,7 @@ chart_vf_cmp = (
     .encode(
         x=alt.X("Rank:N", title="Box rank by volume (1 = smallest)"),
         y=alt.Y("Avg_Void_Fill_%:Q", title="Mean void fill (%)"),
-        color=alt.Color("Scenario:N",
+        colour=alt.Colour("Scenario:N",
                         scale=alt.Scale(domain=["Current", "Optimised"],
                                         range=[COLOR_CURRENT, COLOR_OPTIMISED])),
         tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("box_id:N"), alt.Tooltip("Avg_Void_Fill_%:Q")]))
@@ -104,7 +104,7 @@ boxplot_chart = (
     .encode(
         x=alt.X("Box_Name:N", title="Box ID"),
         y=alt.Y("void_fill_pct:Q", title="Void Fill (%)"),
-        color=alt.Color("Scenario:N",
+        colour=alt.Colour("Scenario:N",
                         scale=alt.Scale(domain=["Current", "Optimised"],
                                         range=[COLOR_CURRENT, COLOR_OPTIMISED])),
         column=alt.Column("Scenario:N", title=""),
@@ -113,7 +113,7 @@ st.altair_chart(boxplot_chart)
 ```
 
 ### 2.5. Pie Chart: Optimised Box Usage
-**Objective:** To illustrate the utilization rate of each box in the optimised set.  
+**Objective:** To illustrate the utilisation rate of each box in the optimised set.  
 **Data Source:** `pie_data`  
 **Technical Implementation (Altair):** A `mark_arc` chart (donut chart) where the angle of each slice is encoded by the "Usage (%)" statistic.
 
@@ -122,24 +122,25 @@ pie = (alt.Chart(pie_data)
 .mark_arc(outerRadius=120, innerRadius=40, stroke="white", strokeWidth=1)
     .encode(
         theta=alt.Theta("Usage (%):Q"),
-        color=alt.Color("box_id:N", scale=alt.Scale(domain=domain, range=range_colors)),
+        colour=alt.Colour("box_id:N", scale=alt.Scale(domain=domain, range=range_colors)),
         tooltip=[alt.Tooltip("box_id:N"), alt.Tooltip("Usage (%):Q")]))
 text = (
     alt.Chart(pie_data)
-    .mark_text(radius=90, size=11, fontWeight="bold", color="white")
+    .mark_text(radius=90, size=11, fontWeight="bold", colour="white")
     .encode(theta=alt.Theta("Usage (%):Q"), text=alt.Text("Usage (%):Q", format=".1f")))
 st.altair_chart(pie + text, use_container_width=True)
 ```
 
 ### 2.6. Histogram & Scatter Plot: Outlier Analysis
-**Objective:** To analyze the characteristics of SKUs assigned to the "safety box."  
+**Objective:** To analyse the characteristics of SKUs assigned to the "safety box."  
 **Data Source:** `outliers`  
 **Technical Implementation (Altair):**  
-- **Histogram:** A `mark_bar` chart that bins outlier SKUs by their volume.  
+- **Histogram:** A `mark_bar` chart that bins outlier SKUs by their volume.
+  
 ```python
 hist_volume = (
     alt.Chart(outliers_volumes)
-    .mark_bar(color=COLOR_SAFETY, opacity=0.85)
+    .mark_bar(colour=COLOR_SAFETY, opacity=0.85)
     .encode(
         x=alt.X("Volume_L:Q", bin=alt.Bin(maxbins=25), title="Volume (Litres)"),
         y=alt.Y("count()", title="Number of SKUs"),
@@ -154,13 +155,13 @@ st.altair_chart(hist_volume, use_container_width=True)
 ```python
 ratio_chart = (
     alt.Chart(outliers_ratios)
-    .mark_circle(size=80, opacity=0.7, color=COLOR_SAFETY)
+    .mark_circle(size=80, opacity=0.7, colour=COLOR_SAFETY)
     .encode(
         x=alt.X("Ratio_L/W:Q", title="Length/Width Ratio", scale=alt.Scale(domain=[0, 10])),
         y=alt.Y("Ratio_L/H:Q", title="Length/Height Ratio", scale=alt.Scale(domain=[0, 10])),
         size=alt.Size("Volume_L:Q", title="Volume (L)", scale=alt.Scale(range=[50, 400])),
         tooltip=[alt.Tooltip("sku_id:N"), alt.Tooltip("Ratio_L/W:Q"), alt.Tooltip("Ratio_L/H:Q")]))
-ref_line = alt.Chart(pd.DataFrame({'x': [0, 10], 'y': [0, 10]})).mark_line(strokeDash=[5, 5], color='gray').encode(x='x:Q', y='y:Q')
+ref_line = alt.Chart(pd.DataFrame({'x': [0, 10], 'y': [0, 10]})).mark_line(strokeDash=[5, 5], colour='grey').encode(x='x:Q', y='y:Q')
 st.altair_chart(ratio_chart + ref_line, use_container_width=True)
 ```
 ---
@@ -169,7 +170,7 @@ st.altair_chart(ratio_chart + ref_line, use_container_width=True)
 
 The final dashboard is built and rendered using Streamlit's native functions.
 
-- **Layout:** The structure is managed by `st.columns()` to position indicators and comparative metrics side-by-side. Visual separation between sections is achieved with `st.divider()`.
+- **Layout:** The structure is managed by `st.columns()` to position indicators and comparative metrics side-by-side. Visual division between sections is achieved with `st.divider()`.
 - **Content Display:** Section headers are created with `st.subheader()`, and explanatory text with `st.caption()` or `st.markdown()`. Key performance indicators are displayed with `st.metric()`.
 - **Chart Rendering:** Altair and Plotly charts are embedded into the application using `st.altair_chart()` and `st.plotly_chart()`.
 
@@ -177,6 +178,6 @@ The final dashboard is built and rendered using Streamlit's native functions.
 
 ## Conclusion
 
-This document provides a methodological description of the visualization components of the dashboard. By detailing the data preparation pipeline and the objective of each chart, it serves as a technical reference for future maintenance, review, or enhancement of the project.
+This document provides a methodological description of the visualisation components of the dashboard. By detailing the data preparation pipeline and the objective of each chart, it serves as a technical reference for future maintenance, review, or enhancement of the project.
 
 ---
