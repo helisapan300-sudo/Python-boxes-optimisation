@@ -1,0 +1,197 @@
+# README — Detailed Technical Explanation of the Packaging Optimisation Engine
+
+This document provides a comprehensive, line-by-line technical commentary of the `Optimised_boxes_solution.py` script. 
+The optimiser implements a deterministic, percentile-based approach that proposes a five-box configuration to minimise void fill while limiting outliers. 
+The commentary below explains what each core function does, how inputs are processed, and how the final configuration is selected. 
+All prose is in British English; code identifiers are left unchanged for correctness.
+
+---
+
+## 1. Overall Flow (High Level)
+- Load SKU data (id, l, w, h, quantity). Dimensions are assumed to be in millimetres.
+- Create candidate boxes from weighted SKU percentiles across volume bands.
+- Evaluate each configuration by assigning SKUs to the smallest fitting box.
+- Compute two KPIs: weighted average void fill (%) and outlier rate (%).
+- Score each configuration with a simple objective function: `score = void_fill + lambda_outliers * outlier_rate`.
+- Select the configuration with the minimum score; optionally add a safety box for remaining outliers.
+
+---
+
+## 2. Candidate Generation — `_create_boxes(self, n_boxes: int, percentile: int) -> List[Box]`
+
+**Purpose:** Build exactly `n` boxes (usually 5) using percentile statistics of SKU dimensions, weighted by quantity.
+
+**Key lines explained:**
+
+1. **Quantity-weighted expansion**
+   ```python
+   weighted = [[s.dim_1, s.dim_2, s.dim_3, s.volume]
+               for s in self.skus
+               for _ in range(s.quantity)]
+   ```
+   - Replicates each SKU by its `quantity`. This ensures frequent SKUs have proportionally larger influence.
+
+2. **DataFrame for quantiles**
+   ```python
+   df = pd.DataFrame(weighted, columns=["dim_1", "dim_2", "dim_3", "volume"])
+   ```
+   - Converts the weighted list into a `pandas` DataFrame to compute quantiles/groupings.
+
+3. **Volume banding (equal-frequency)**
+   ```python
+   df["group"] = pd.qcut(df["volume"], q=n_boxes, labels=False, duplicates="drop")
+   ```
+   - Splits entries into `n_boxes` bands with roughly equal counts.
+
+4. **Fallback: equal-width bands**
+   ```python
+   if df["group"].nunique() < n_boxes:
+       df["group"] = pd.cut(df["volume"], bins=n_boxes, labels=False, include_lowest=True)
+   ```
+   - If `qcut` merges bands (e.g., skewed data), fall back to `cut` to force `n_boxes` bins.
+
+5. **Percentile-based sizing per band**
+   ```python
+   for gid in sorted(df["group"].unique()):
+       g = df[df["group"] == gid] if not df[df["group"] == gid].empty else df
+       dim1 = g["dim_1"].quantile(percentile / 100.0)
+       dim2 = g["dim_2"].quantile(percentile / 100.0)
+       dim3 = g["dim_3"].quantile(percentile / 100.0)
+   ```
+   - Picks the target percentile within each band; defines the box size covering most items in that band.
+
+6. **Rounding and minima**
+   ```python
+   dim1 = max(int(math.ceil(dim1 / 10.0) * 10), 200)
+   dim2 = max(int(math.ceil(dim2 / 10.0) * 10), 100)
+   dim3 = max(int(math.ceil(dim3 / 10.0) * 10), 50)
+   ```
+   - Rounds up to the nearest 10 mm to get practical, manufacturable sizes and imposes minimums.
+
+7. **Box creation and ID standardisation**
+   ```python
+   boxes.append(Box(f"OPT_{len(boxes)+1}", dim1, dim2, dim3))
+   boxes = boxes[:n_boxes]
+   for i, b in enumerate(boxes, 1):
+       b.box_id = f"OPT_{i}"
+   ```
+   - Creates each `Box`, truncates to exactly `n`, and standardises IDs to `OPT_1..OPT_n`.
+
+---
+
+## 3. Configuration Assessment — `_evaluate_boxes(self, boxes: List[Box]) -> Tuple[float, float]`
+
+**Purpose:** Assign SKUs to the smallest box that fits and compute KPIs.
+
+1. **Sort boxes by volume**
+   ```python
+   ordered = sorted(boxes, key=lambda b: b.volume)
+   ```
+   - Ensures the greedy assignment uses the smallest feasible box.
+
+2. **Assignment loop**
+   ```python
+   for s in self.skus:
+       s.assigned_box = None
+       dims = s.get_dimensions()
+       for b in ordered:
+           if b.can_fit(dims):
+               s.assigned_box = b.box_id
+               break
+   ```
+   - For each SKU, iterate over boxes; first that fits is selected. Unassigned SKUs are outliers.
+
+3. **Compute totals and outliers**
+   ```python
+   total = sum(s.quantity for s in self.skus)
+   outliers = sum(s.quantity for s in self.skus if s.assigned_box is None)
+   ```
+
+4. **Weighted void fill calculation**
+   ```python
+   vf_sum = 0.0
+   fit_q = 0
+   for s in self.skus:
+       if s.assigned_box:
+           b = next(bb for bb in boxes if bb.box_id == s.assigned_box)
+           vf_sum += b.calculate_void_fill(s.volume) * s.quantity
+           fit_q += s.quantity
+   avg_vf = (vf_sum / fit_q) if fit_q else 100.0
+   ```
+   - `calculate_void_fill(volume)` returns `(1 - item_volume/box_volume) * 100`.
+   - Weighted by quantity to reflect SKU frequency.
+
+5. **Outlier rate**
+   ```python
+   out_rate = (outliers / total) * 100 if total else 0.0
+   return avg_vf, out_rate
+   ```
+
+---
+
+## 4. Objective Function — `_objective(self, void_fill_pct: float, outlier_rate_pct: float) -> float`
+
+**Purpose:** Convert two KPIs into a single score for ranking candidates.
+```python
+return void_fill_pct + self.lambda_outliers * outlier_rate_pct
+```
+- Larger `lambda_outliers` prioritises inclusiveness (fewer outliers).
+- Smaller `lambda_outliers` prioritises compactness (lower void fill).
+
+---
+
+## 5. Main Search Loop — `_optimise(self) -> Dict`
+
+**Purpose:** Evaluate every percentile configuration and select the best-scoring result.
+
+1. **Loop over percentiles and build boxes**
+   ```python
+   candidates = []
+   for p in self.percentile_grid:
+       boxes = self._create_boxes(n_boxes=5, percentile=p)
+       vf, out = self._evaluate_boxes(boxes)
+   ```
+
+2. **Optional safety box and re-evaluation**
+   ```python
+   if self.add_safety_box and out > 0:
+       self._add_safety_box_to(boxes)
+       vf, out = self._evaluate_boxes(boxes)
+   ```
+
+3. **Score and keep record**
+   ```python
+   score = self._objective(vf, out)
+   candidates.append({
+       "percentile": p,
+       "n_boxes": len([b for b in boxes if b.box_id != "OPT_SAFETY"]),
+       "void_fill": vf,
+       "outlier_rate": out,
+       "score": score,
+       "boxes": boxes,
+   })
+   ```
+
+4. **Pick best and recompute KPIs for consistency**
+   ```python
+   best = min(candidates, key=lambda x: x["score"])
+   vf, out = self._evaluate_boxes(best["boxes"])
+   best.update({"void_fill": vf, "outlier_rate": out})
+   return best
+   ```
+
+---
+
+## 6. Outlier Inclusion — `_add_safety_box_to(self, boxes: List[Box]) -> None`
+
+**Purpose:** Provide a fallback box so that all outliers can be assigned.
+```python
+outliers = [s for s in self.skus if s.assigned_box is None]
+if not outliers:
+    return
+d1 = int(math.ceil(max(s.dim_1 for s in outliers)/50)*50)
+d2 = int(math.ceil(max(s.dim_2 for s in outliers)/50)*50)
+d3 = int(math.ceil(max(s.dim_3 for s in outliers)/50)*50)
+boxes.append(Box("OPT_SAFETY", d1, d2, d3))
+```
+- Uses max dimension per axis among outliers; rounds up to nearest 50 mm for practicality.
