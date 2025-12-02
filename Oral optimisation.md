@@ -285,16 +285,3 @@ A003, 150, 100, 80, 20
 ```
 
 The script will print the best set of boxes and performance results in your console.
-
----
-
-## 6. Summary
-
-- The algorithm uses **percentiles** to propose practical box sizes.  
-- It measures **void fill** and **outlier rate** to find the balance between efficiency and inclusiveness.  
-- It uses a simple **objective function** to pick the best combination automatically.  
-- A **safety box** ensures that no item is left unassigned.  
-
-By reading and understanding this file, you should now be able to follow the logic of the optimisation program step by step.
-
----
